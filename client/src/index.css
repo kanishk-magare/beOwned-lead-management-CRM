@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --c-new: #2563eb;
+    --c-contacted: #d97706;
+    --c-visit: #7c3aed;
+    --c-closed: #16a34a;
+  }
+
+  [data-theme='dark'] {
+    --c-new: #60a5fa;
+    --c-contacted: #f59e0b;
+    --c-visit: #a78bfa;
+    --c-closed: #34d399;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 dark:bg-[#0b0f19] dark:text-slate-100 antialiased font-sans;
+    margin: 0;
+  }
+
+  /* Smooth transition for theme switching */
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease, fill 0.2s ease, box-shadow 0.25s ease !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Reusable component utility styles inspired by clean real-estate proptech aesthetic */
+  .card {
+    @apply bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 shadow-[0_1px_3px_0_rgba(15,23,42,0.04),0_1px_2px_-1px_rgba(15,23,42,0.03)] transition-all duration-200;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-white dark:bg-[#111827] text-slate-700 dark:text-slate-200 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800/70 hover:border-slate-300 dark:hover:border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 active:scale-[0.99] hover:no-underline shadow-sm;
+  }
+
+  .btn-sm {
+    @apply px-3 py-1.5 text-xs rounded-lg;
+  }
+
+  .btn-primary {
+    @apply bg-blue-900 hover:bg-blue-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white border-transparent hover:border-transparent focus:ring-blue-600/30 shadow-sm hover:shadow-md hover:shadow-blue-900/10;
+  }
+
+  .btn-danger {
+    @apply text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/60 bg-red-50/50 dark:bg-red-950/20 hover:bg-red-50 dark:hover:bg-red-950/40 hover:border-red-300 dark:hover:border-red-800 focus:ring-red-500/20;
+  }
+
+  .btn-ghost {
+    @apply border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-100 shadow-none;
+  }
+
+  .link-btn {
+    @apply bg-transparent border-0 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 text-xs p-0 cursor-pointer transition-colors;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border tracking-wide whitespace-nowrap;
+  }
+
+  .badge-new {
+    @apply bg-blue-50/90 text-blue-700 border-blue-200/90 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800/60;
+  }
+
+  .badge-contacted {
+    @apply bg-amber-50/90 text-amber-700 border-amber-200/90 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/60;
+  }
+
+  .badge-visit {
+    @apply bg-purple-50/90 text-purple-700 border-purple-200/90 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800/60;
+  }
+
+  .badge-closed {
+    @apply bg-emerald-50/90 text-emerald-700 border-emerald-200/90 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/60;
+  }
+}
