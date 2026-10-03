@@ -90,11 +90,26 @@ function validateHeaders(headers) {
   return { isValid: true };
 }
 
-// Reads the CSV file, grabs the first line, and validates headers
-function validateCsvFileHeaders(filePath) {
+const readline = require('readline');
+
+// Asynchronously reads ONLY the first non-empty line via stream and validates headers
+async function validateCsvFileHeaders(filePath) {
+  let fileStream = null;
+  let rl = null;
   try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    const firstLine = content.split(/\r?\n/).find((line) => line.trim().length > 0);
+    fileStream = fs.createReadStream(filePath);
+    rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+
+    let firstLine = null;
+    for await (const line of rl) {
+      if (line.trim().length > 0) {
+        firstLine = line;
+        break;
+      }
+    }
 
     if (!firstLine) {
       return {
@@ -110,6 +125,9 @@ function validateCsvFileHeaders(filePath) {
       isValid: false,
       message: `Could not read CSV file headers: ${err.message}`,
     };
+  } finally {
+    if (rl) rl.close();
+    if (fileStream) fileStream.destroy();
   }
 }
 

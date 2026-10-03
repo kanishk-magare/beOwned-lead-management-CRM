@@ -2,8 +2,10 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const asyncHandler = require('../utils/asyncHandler');
+const readline = require('readline');
+const fsPromises = require('fs/promises');
 const { leadImportQueue } = require('../workers/importQueue');
-const { validateCsvFileHeaders } = require('../utils/csvHeaderValidator');
+const { parseHeaderLine, validateHeaders } = require('../utils/csvHeaderValidator');
 
 // Ensure uploads directory exists
 const UPLOADS_DIR = path.join(__dirname, '../../uploads');
@@ -56,38 +58,62 @@ const uploadCsv = asyncHandler(async (req, res) => {
   const filePath = req.file.path;
   console.log(`Processing CSV upload: ${req.file.originalname}`);
 
-  // 1. Basic CSV check: Count rows and validate header presence
-  let fileContent;
+  // 1. Asynchronous non-blocking inspection using Streams & readline
+  let firstLine = null;
+  let dataRowCount = 0;
+  let fileStream = null;
+  let rl = null;
+
   try {
-    fileContent = fs.readFileSync(filePath, 'utf8');
+    fileStream = fs.createReadStream(filePath);
+    rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity,
+    });
+
+    for await (const line of rl) {
+      if (line.trim().length > 0) {
+        if (!firstLine) {
+          firstLine = line;
+        } else {
+          dataRowCount++;
+          if (dataRowCount > 500) {
+            break;
+          }
+        }
+      }
+    }
   } catch (err) {
+    await fsPromises.unlink(filePath).catch(() => {});
     return res.status(400).json({ success: false, error: { message: 'Could not read uploaded file' } });
+  } finally {
+    if (rl) rl.close();
+    if (fileStream) fileStream.destroy();
   }
 
-  const lines = fileContent.split(/\r?\n/).filter((line) => line.trim().length > 0);
-  if (lines.length <= 1) {
-    try { fs.unlinkSync(filePath); } catch {}
+  if (!firstLine || dataRowCount === 0) {
+    await fsPromises.unlink(filePath).catch(() => {});
     return res.status(400).json({
       success: false,
       error: { message: 'CSV file is empty or missing data rows' },
     });
   }
 
-  const dataRowCount = lines.length - 1; // exclude header
   if (dataRowCount > 500) {
-    try { fs.unlinkSync(filePath); } catch {}
+    await fsPromises.unlink(filePath).catch(() => {});
     return res.status(400).json({
       success: false,
-      error: { message: `File contains ${dataRowCount} leads. The maximum allowed is 500 leads per import.` },
+      error: { message: `File contains more than 500 leads. The maximum allowed is 500 leads per import.` },
     });
   }
 
   // 2. Strict Header Validation FIRST
   // If any header is missing, misspelled, extra, or incorrect:
   // immediately fail the file, do not queue or process any rows.
-  const headerValidation = validateCsvFileHeaders(filePath);
+  const headers = parseHeaderLine(firstLine);
+  const headerValidation = validateHeaders(headers);
   if (!headerValidation.isValid) {
-    try { fs.unlinkSync(filePath); } catch {}
+    await fsPromises.unlink(filePath).catch(() => {});
     return res.status(400).json({
       success: false,
       error: { message: headerValidation.message },

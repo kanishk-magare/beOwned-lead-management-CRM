@@ -132,7 +132,7 @@ async function parseAndValidate(filePath) {
 (async () => {
   try {
     // 1. Strict Header Check before parsing or row validation
-    const headerCheck = validateCsvFileHeaders(workerData.filePath);
+    const headerCheck = await validateCsvFileHeaders(workerData.filePath);
     if (!headerCheck.isValid) {
       parentPort.postMessage({ success: false, error: headerCheck.message });
       return;

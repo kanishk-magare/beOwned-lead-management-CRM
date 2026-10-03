@@ -2,6 +2,7 @@ const { Queue, Worker } = require('bullmq');
 const { Worker: ThreadWorker } = require('worker_threads');
 const path = require('path');
 const fs = require('fs');
+const fsPromises = require('fs/promises');
 const { redisConnection } = require('../config/redis');
 const { Lead } = require('../models');
 
@@ -46,7 +47,7 @@ function runWorkerThread(filePath) {
 /**
  * Helper to write an invalid records CSV with reasons
  */
-function generateInvalidCsv(invalidRows, outputPath) {
+async function generateInvalidCsv(invalidRows, outputPath) {
   if (!invalidRows || invalidRows.length === 0) return;
   const headers = ['name', 'phone', 'email', 'budget', 'location', 'propertyType', 'source', 'status', 'reason'];
   const escapeCsv = (val) => {
@@ -73,7 +74,7 @@ function generateInvalidCsv(invalidRows, outputPath) {
     lines.push(line.join(','));
   }
 
-  fs.writeFileSync(outputPath, lines.join('\n'), 'utf8');
+  await fsPromises.writeFile(outputPath, lines.join('\n'), 'utf8');
 }
 
 /**
@@ -91,9 +92,7 @@ const importWorker = new Worker(
       parsedResult = await runWorkerThread(filePath);
       await job.updateProgress(40);
     } catch (err) {
-      if (fs.existsSync(filePath)) {
-        try { fs.unlinkSync(filePath); } catch {}
-      }
+      await fsPromises.unlink(filePath).catch(() => {});
       throw err;
     }
 
@@ -126,13 +125,11 @@ const importWorker = new Worker(
       const uploadsDir = path.dirname(filePath);
       invalidCsvFileName = `invalid_leads_${job.id}.csv`;
       const invalidPath = path.join(uploadsDir, invalidCsvFileName);
-      generateInvalidCsv(invalidRows, invalidPath);
+      await generateInvalidCsv(invalidRows, invalidPath);
     }
 
     // 4. Clean up original uploaded file
-    if (fs.existsSync(filePath)) {
-      try { fs.unlinkSync(filePath); } catch {}
-    }
+    await fsPromises.unlink(filePath).catch(() => {});
 
     await job.updateProgress(100);
 
@@ -155,8 +152,8 @@ const importWorker = new Worker(
 
 importWorker.on('failed', (job, err) => {
   console.error(`[BullMQ Worker] Job ${job?.id} failed:`, err.message);
-  if (job?.data?.filePath && fs.existsSync(job.data.filePath)) {
-    try { fs.unlinkSync(job.data.filePath); } catch {}
+  if (job?.data?.filePath) {
+    fsPromises.unlink(job.data.filePath).catch(() => {});
   }
 });
 
