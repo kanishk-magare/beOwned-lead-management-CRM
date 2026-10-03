@@ -35,3 +35,9 @@ Thumbs.db
 # Uploads & Temporary files
 uploads/
 *.tmp
+# Presentations, Screenshots & Prep Guides
+*.pptx
+Screenshot*.png
+INTERVIEW_PREP_GUIDE.md
+~$*
+
