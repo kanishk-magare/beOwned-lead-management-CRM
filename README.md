@@ -2,7 +2,7 @@
 
 A full-stack Lead Management System / mini CRM built for a real-estate sales use case. It allows sales teams to create, manage, search, filter, track, and convert property leads through a simple sales pipeline.
 
-Built as a full-stack assignment for **UpTown Spaces Pvt. Ltd.**
+Built as a full-stack assignment for **beOwned Spaces Pvt. Ltd.**
 
 ## Prerequisites
 
@@ -18,8 +18,8 @@ You do **not** need Node.js, PostgreSQL, or Redis installed locally. Everything 
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd beOwned-CRM
+git clone https://github.com/kanishk-magare/beOwned-lead-management-CRM.git
+cd beOwned-lead-management-CRM
 ```
 
 ### 2. Start the application
@@ -258,7 +258,7 @@ Provides:
 ## Project Structure
 
 ```text
-beOwned-crm/
+beOwned-lead-management-CRM/
 │
 ├── client/                 # React frontend
 │   └── src/
